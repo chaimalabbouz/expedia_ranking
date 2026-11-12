@@ -1,0 +1,6 @@
+outs:
+- md5: 0318c09995fa1e5238f68420c9518efb.dir
+  size: 109391905
+  nfiles: 1
+  hash: md5
+  path: offline
