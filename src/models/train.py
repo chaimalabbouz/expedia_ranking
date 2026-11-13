@@ -29,9 +29,10 @@ NUM_ROUNDS = 300
 EARLY_STOP = 30
 
 
-def load(name: str, fb: FeatureBuilder):
-    df = fb.transform(pd.read_parquet(SPLITS / f"{name}.parquet"))
-    df = df.sort_values(GROUP, kind="stable").reset_index(drop=True)
+def load(name: str, fb: FeatureBuilder, train: bool = False):
+    raw = pd.read_parquet(SPLITS / f"{name}.parquet")
+    df = fb.fit_transform(raw) if train else fb.transform(raw)
+    df = df.sort_values(GROUP, kind="stable").reset_index(drop=True)  # lignes d'une recherche contiguës
     features = [c for c in df.columns if c not in EXCLUDE]
     group_sizes = df.groupby(GROUP, sort=False).size().to_numpy()
     return df[features], df[TARGET], group_sizes, features
@@ -45,17 +46,17 @@ def git_commit() -> str:
 
 
 def main() -> None:
-    fb = FeatureBuilder().fit(pd.read_parquet(SPLITS / "train.parquet"))
-    X_tr, y_tr, g_tr, features = load("train", fb)
-    X_va, y_va, g_va, _ = load("val", fb)
+    fb = FeatureBuilder()
+    X_tr, y_tr, g_tr, features = load("train", fb, train=True)  # fit + OOF sur le train
+    X_va, y_va, g_va, _ = load("val", fb)                       # stats du train appliquées
 
     dtrain = lgb.Dataset(X_tr, y_tr, group=g_tr)
     dval = lgb.Dataset(X_va, y_va, group=g_va, reference=dtrain)
 
     mlflow.set_experiment("expedia-ranking")
-    with mlflow.start_run(run_name="v1_relative"):
+    with mlflow.start_run(run_name="v3_missing_rerun"):
         mlflow.log_params({**PARAMS, "num_rounds": NUM_ROUNDS, "n_features": len(features)})
-        mlflow.set_tags({"git_commit": git_commit(), "feature_set": "base+temporal+relative"})
+        mlflow.set_tags({"git_commit": git_commit(), "feature_set": "base+temporal+relative+prop+missing"})
         mlflow.log_dict({"features": features}, "features.json")
 
         model = lgb.train(
