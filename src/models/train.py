@@ -6,7 +6,7 @@ import mlflow
 import numpy as np
 import pandas as pd
 
-from src.features.build_features import build
+from src.features.build_features import FeatureBuilder
 
 SPLITS = Path("data/splits")
 TARGET, GROUP = "relevance", "srch_id"
@@ -29,9 +29,9 @@ NUM_ROUNDS = 300
 EARLY_STOP = 30
 
 
-def load(name: str):
-    df = build(pd.read_parquet(SPLITS / f"{name}.parquet"))
-    df = df.sort_values(GROUP, kind="stable").reset_index(drop=True)  # lignes d'une recherche contiguës
+def load(name: str, fb: FeatureBuilder):
+    df = fb.transform(pd.read_parquet(SPLITS / f"{name}.parquet"))
+    df = df.sort_values(GROUP, kind="stable").reset_index(drop=True)
     features = [c for c in df.columns if c not in EXCLUDE]
     group_sizes = df.groupby(GROUP, sort=False).size().to_numpy()
     return df[features], df[TARGET], group_sizes, features
@@ -45,8 +45,9 @@ def git_commit() -> str:
 
 
 def main() -> None:
-    X_tr, y_tr, g_tr, features = load("train")
-    X_va, y_va, g_va, _ = load("val")
+    fb = FeatureBuilder().fit(pd.read_parquet(SPLITS / "train.parquet"))
+    X_tr, y_tr, g_tr, features = load("train", fb)
+    X_va, y_va, g_va, _ = load("val", fb)
 
     dtrain = lgb.Dataset(X_tr, y_tr, group=g_tr)
     dval = lgb.Dataset(X_va, y_va, group=g_va, reference=dtrain)
