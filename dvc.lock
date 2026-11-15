@@ -72,7 +72,7 @@ stages:
         lgbm:
           objective: lambdarank
           learning_rate: 0.1
-          num_leaves: 31
+          num_leaves: 63
           min_data_in_leaf: 50
           feature_fraction: 0.8
           verbose: -1
@@ -89,9 +89,48 @@ stages:
       size: 4786293
     - path: models/model.txt
       hash: md5
-      md5: 624b3dbb19c5f4c66006964283d0e2a6
-      size: 1034574
+      md5: 1d75c6081f40a7dffeacaa2149a8dfe3
+      size: 1170078
     - path: reports/metrics.json
       hash: md5
-      md5: 1bb5800aff0f9e39055df9d4e02ae0f1
+      md5: 1dc2e9a3e9a876be0d06b88c66982dc0
       size: 70
+  evaluate:
+    cmd: python -m src.models.evaluate
+    deps:
+    - path: data/splits/test.parquet
+      hash: md5
+      md5: 3ac82d3f400c615de953d1025ae988bb
+      size: 16088916
+    - path: models/feature_builder.pkl
+      hash: md5
+      md5: a344de55e73452a8401ab6ff2f5007e9
+      size: 4786293
+    - path: models/model.txt
+      hash: md5
+      md5: 1d75c6081f40a7dffeacaa2149a8dfe3
+      size: 1170078
+    - path: src/features
+      hash: md5
+      md5: 13dbe24752f016bb5492c3d150c02c1b.dir
+      size: 25764
+      nfiles: 18
+    - path: src/models/evaluate.py
+      hash: md5
+      md5: 38f7abf8d37ed2e24c655cff0b0e2b6f
+      size: 3219
+    params:
+      params.yaml:
+        evaluate:
+          ks:
+          - 5
+          - 38
+    outs:
+    - path: reports/shap_importance.json
+      hash: md5
+      md5: 2a8059dc1fd1c7590b19d45a2be35cf0
+      size: 2410
+    - path: reports/test_metrics.json
+      hash: md5
+      md5: 687a373494147ccab38016a1916b7098
+      size: 307
