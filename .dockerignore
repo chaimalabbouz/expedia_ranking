@@ -1,0 +1,10 @@
+.venv
+.git
+.dvc
+data
+mlruns
+mlflow.db
+catboost_info
+notebooks
+__pycache__
+*.pyc
