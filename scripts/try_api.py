@@ -1,6 +1,7 @@
 import json
-import requests
+
 import pandas as pd
+import requests
 
 df = pd.read_parquet("data/splits/test.parquet")
 srch = df[df["srch_id"] == df["srch_id"].iloc[0]]
