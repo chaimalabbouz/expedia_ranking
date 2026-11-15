@@ -60,8 +60,8 @@ stages:
       nfiles: 18
     - path: src/models/train.py
       hash: md5
-      md5: 521c1222da361c1d164c7dbea1d13e1c
-      size: 3506
+      md5: 750fb90d2d86872d014c22906871f85e
+      size: 3558
     params:
       params.yaml:
         features:
@@ -117,8 +117,8 @@ stages:
       nfiles: 18
     - path: src/models/evaluate.py
       hash: md5
-      md5: 38f7abf8d37ed2e24c655cff0b0e2b6f
-      size: 3219
+      md5: 8f2e6d94385755b50ef26fdac9da4658
+      size: 3271
     params:
       params.yaml:
         evaluate:
@@ -134,3 +134,27 @@ stages:
       hash: md5
       md5: 687a373494147ccab38016a1916b7098
       size: 307
+  promote:
+    cmd: python -m src.models.promote
+    deps:
+    - path: models/feature_builder.pkl
+      hash: md5
+      md5: a344de55e73452a8401ab6ff2f5007e9
+      size: 4786293
+    - path: models/model.txt
+      hash: md5
+      md5: 1d75c6081f40a7dffeacaa2149a8dfe3
+      size: 1170078
+    - path: reports/test_metrics.json
+      hash: md5
+      md5: 687a373494147ccab38016a1916b7098
+      size: 307
+    - path: src/models/promote.py
+      hash: md5
+      md5: 6536dd658a7a8edbc628c4f71b33e7bf
+      size: 1860
+    outs:
+    - path: reports/promotion.json
+      hash: md5
+      md5: fd3600e63a0390ab2e8fe1ff571b2a0f
+      size: 106

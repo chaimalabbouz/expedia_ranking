@@ -35,3 +35,30 @@ stages:
     metrics:
       - reports/metrics.json:
           cache: false
+
+  evaluate:
+    cmd: python -m src.models.evaluate
+    deps:
+      - src/models/evaluate.py
+      - src/features
+      - models/model.txt
+      - models/feature_builder.pkl
+      - data/splits/test.parquet
+    params:
+      - evaluate
+    outs:
+      - reports/shap_importance.json
+    metrics:
+      - reports/test_metrics.json:
+          cache: false          
+
+  promote:
+    cmd: python -m src.models.promote
+    deps:
+      - src/models/promote.py
+      - models/model.txt
+      - models/feature_builder.pkl
+      - reports/test_metrics.json
+    outs:
+      - reports/promotion.json:
+          cache: false

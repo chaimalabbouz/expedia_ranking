@@ -51,6 +51,7 @@ def main() -> None:
     dtrain = lgb.Dataset(X_tr, y_tr, group=g_tr, weight=w_tr)  # poids seulement sur le train
     dval = lgb.Dataset(X_va, y_va, group=g_va, reference=dtrain)
 
+    mlflow.set_tracking_uri("sqlite:///mlflow.db")
     mlflow.set_experiment("expedia-ranking")
     with mlflow.start_run(run_name="v0_baseline_ndcg38"):
         mlflow.log_params({**PARAMS, "num_rounds": NUM_ROUNDS, "n_features": len(features),

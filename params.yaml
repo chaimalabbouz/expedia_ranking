@@ -22,3 +22,6 @@ lgbm:
   min_data_in_leaf: 50
   feature_fraction: 0.8
   verbose: -1
+
+evaluate:
+  ks: [5, 38]  
