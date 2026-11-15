@@ -1,6 +1,6 @@
 from pathlib import Path
-import pandas as pd
 
+import pandas as pd
 import yaml
 
 IN_PATH = Path("data/offline/offline.parquet")

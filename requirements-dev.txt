@@ -1,0 +1,6 @@
+-r requirements-api.txt
+pytest
+httpx
+pandera
+pyyaml
+ruff
