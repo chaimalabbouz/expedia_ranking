@@ -1,0 +1,97 @@
+schema: '2.0'
+stages:
+  validate:
+    cmd: python -m src.data.validate
+    deps:
+    - path: data/offline/offline.parquet
+      hash: md5
+      md5: 9ed6254a83f4bff08e332929faaceb3a
+      size: 109391905
+    - path: src/data/validate.py
+      hash: md5
+      md5: 4698062c60e34dfde5ee948cc8696909
+      size: 1407
+    outs:
+    - path: reports/validation.json
+      hash: md5
+      md5: 9b1ab958bf2273ec349567e01f9fa1c8
+      size: 49
+  split:
+    cmd: python -m src.data.split
+    deps:
+    - path: data/offline/offline.parquet
+      hash: md5
+      md5: 9ed6254a83f4bff08e332929faaceb3a
+      size: 109391905
+    - path: reports/validation.json
+      hash: md5
+      md5: 9b1ab958bf2273ec349567e01f9fa1c8
+      size: 49
+    - path: src/data/split.py
+      hash: md5
+      md5: 5869e7b3b035cc014e825996204dc0d6
+      size: 1561
+    params:
+      params.yaml:
+        split:
+          train_ratio: 0.7
+          val_ratio: 0.15
+    outs:
+    - path: data/splits
+      hash: md5
+      md5: 9e05d065f6aab115b380455c3ce9711f.dir
+      size: 109283026
+      nfiles: 3
+  train:
+    cmd: python -m src.models.train
+    deps:
+    - path: data/splits/train.parquet
+      hash: md5
+      md5: b0e24af9cea5c2a190400075aae9fa07
+      size: 76855204
+    - path: data/splits/val.parquet
+      hash: md5
+      md5: 5260362993d4c181c40c1e2f7ea12219
+      size: 16338906
+    - path: src/features
+      hash: md5
+      md5: 13dbe24752f016bb5492c3d150c02c1b.dir
+      size: 25764
+      nfiles: 18
+    - path: src/models/train.py
+      hash: md5
+      md5: 521c1222da361c1d164c7dbea1d13e1c
+      size: 3506
+    params:
+      params.yaml:
+        features:
+          relative: true
+          prop: true
+          dest: false
+          context: false
+        lgbm:
+          objective: lambdarank
+          learning_rate: 0.1
+          num_leaves: 31
+          min_data_in_leaf: 50
+          feature_fraction: 0.8
+          verbose: -1
+        train:
+          seed: 42
+          ndcg_k: 38
+          random_weight: 1.0
+          num_rounds: 300
+          early_stop: 30
+    outs:
+    - path: models/feature_builder.pkl
+      hash: md5
+      md5: a344de55e73452a8401ab6ff2f5007e9
+      size: 4786293
+    - path: models/model.txt
+      hash: md5
+      md5: 624b3dbb19c5f4c66006964283d0e2a6
+      size: 1034574
+    - path: reports/metrics.json
+      hash: md5
+      md5: 1bb5800aff0f9e39055df9d4e02ae0f1
+      size: 70

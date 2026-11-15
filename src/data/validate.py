@@ -30,6 +30,11 @@ def validate(df: pd.DataFrame) -> pd.DataFrame:
 
 
 if __name__ == "__main__":
+    import json
+    from pathlib import Path
     df = pd.read_parquet("data/offline/offline.parquet")
     validate(df)
+    Path("reports").mkdir(exist_ok=True)
+    json.dump({"status": "ok", "n_rows": len(df), "n_cols": df.shape[1]},
+              open("reports/validation.json", "w"))
     print("Validation OK :", df.shape)

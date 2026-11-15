@@ -1,10 +1,12 @@
 from pathlib import Path
 import pandas as pd
 
+import yaml
+
 IN_PATH = Path("data/offline/offline.parquet")
 OUT_DIR = Path("data/splits")
-TRAIN_RATIO, VAL_RATIO = 0.70, 0.15
-
+_p = yaml.safe_load(open("params.yaml"))["split"]
+TRAIN_RATIO, VAL_RATIO = _p["train_ratio"], _p["val_ratio"]
 
 def split_offline() -> None:
     df = pd.read_parquet(IN_PATH)

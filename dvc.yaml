@@ -1,0 +1,37 @@
+stages:
+  validate:
+    cmd: python -m src.data.validate
+    deps:
+      - src/data/validate.py
+      - data/offline/offline.parquet
+    outs:
+      - reports/validation.json
+
+  split:
+    cmd: python -m src.data.split
+    deps:
+      - src/data/split.py
+      - data/offline/offline.parquet
+      - reports/validation.json
+    params:
+      - split
+    outs:
+      - data/splits
+
+  train:
+    cmd: python -m src.models.train
+    deps:
+      - src/models/train.py
+      - src/features
+      - data/splits/train.parquet
+      - data/splits/val.parquet
+    params:
+      - features
+      - train
+      - lgbm
+    outs:
+      - models/model.txt
+      - models/feature_builder.pkl
+    metrics:
+      - reports/metrics.json:
+          cache: false

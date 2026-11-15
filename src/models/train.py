@@ -5,29 +5,21 @@ import lightgbm as lgb
 import mlflow
 import numpy as np
 import pandas as pd
+import json
+import joblib
+import yaml
 
 from src.features.build_features import FeatureBuilder
 
 SPLITS = Path("data/splits")
 TARGET, GROUP = "relevance", "srch_id"
 EXCLUDE = [TARGET, GROUP, "date_time"]
-SEED = 42
-NDCG_K = 38
-RANDOM_WEIGHT = 1.0  # poids des recherches à affichage aléatoire (sans biais de position)
 
-PARAMS = {
-    "objective": "lambdarank",
-    "metric": "ndcg",
-    "eval_at": [NDCG_K],
-    "learning_rate": 0.1,
-    "num_leaves": 63,
-    "min_data_in_leaf": 50,
-    "feature_fraction": 0.8,
-    "seed": SEED,
-    "verbose": -1,
-}
-NUM_ROUNDS = 300
-EARLY_STOP = 30
+P = yaml.safe_load(open("params.yaml"))
+SEED, NDCG_K = P["train"]["seed"], P["train"]["ndcg_k"]
+RANDOM_WEIGHT = P["train"]["random_weight"]
+NUM_ROUNDS, EARLY_STOP = P["train"]["num_rounds"], P["train"]["early_stop"]
+PARAMS = {**P["lgbm"], "metric": "ndcg", "eval_at": [NDCG_K], "seed": SEED}
 
 
 def load(name: str, fb: FeatureBuilder, train: bool = False):
@@ -52,7 +44,7 @@ def git_commit() -> str:
 
 
 def main() -> None:
-    fb = FeatureBuilder()
+    fb = FeatureBuilder(**P["features"])
     X_tr, y_tr, g_tr, w_tr, features = load("train", fb, train=True)
     X_va, y_va, g_va, _, _ = load("val", fb)
 
@@ -80,6 +72,15 @@ def main() -> None:
 
         print(f"\nNDCG@{NDCG_K} (val) : {ndcg:.4f} | best_iteration : {model.best_iteration}")
         print("Top 10 features (gain) :\n", imp.head(10).round(0).to_string())
+
+        # --- Sorties pour DVC (nouveau) ---
+        Path("models").mkdir(exist_ok=True)
+        Path("reports").mkdir(exist_ok=True)
+        model.save_model("models/model.txt")
+        joblib.dump(fb, "models/feature_builder.pkl")
+        json.dump({f"val_ndcg_at_{NDCG_K}": ndcg, "best_iteration": model.best_iteration},
+                  open("reports/metrics.json", "w"), indent=2)
+        mlflow.log_artifact("models/model.txt")
 
 
 if __name__ == "__main__":

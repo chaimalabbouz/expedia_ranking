@@ -1,0 +1,24 @@
+split:
+  train_ratio: 0.70
+  val_ratio: 0.15
+
+features:
+  relative: true
+  prop: true
+  dest: false
+  context: false
+
+train:
+  seed: 42
+  ndcg_k: 38
+  random_weight: 1.0
+  num_rounds: 300
+  early_stop: 30
+
+lgbm:
+  objective: lambdarank
+  learning_rate: 0.1
+  num_leaves:  63
+  min_data_in_leaf: 50
+  feature_fraction: 0.8
+  verbose: -1
