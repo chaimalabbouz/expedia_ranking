@@ -1,10 +1,12 @@
+import time
 from contextlib import asynccontextmanager
 from datetime import datetime
 
 import joblib
 import lightgbm as lgb
 import pandas as pd
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 from pydantic import BaseModel, ConfigDict
 
 MODEL_PATH = "models/model.txt"
@@ -23,7 +25,13 @@ NUM_COLS = [c for c in RAW_COLS if c != "date_time"]
 
 state = {}
 
-
+REQUESTS = Counter("predict_requests_total", "Requêtes /predict", ["status"])
+LATENCY = Histogram("predict_latency_seconds", "Latence de /predict",
+                    buckets=(0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5))
+LIST_SIZE = Histogram("predict_list_size", "Nombre d'hôtels par requête",
+                      buckets=(1, 5, 10, 20, 30, 50, 100, 200))
+SCORES = Histogram("predict_score", "Scores prédits",
+                   buckets=(-2, -1.5, -1, -0.5, -0.25, 0, 0.25, 0.5, 1, 1.5, 2))
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     state["model"] = lgb.Booster(model_file=MODEL_PATH)
@@ -50,11 +58,15 @@ class SearchRequest(BaseModel):
 @app.get("/health")
 def health():
     return {"status": "ok", "model_loaded": "model" in state}
-
+@app.get("/metrics")
+def metrics():
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 @app.post("/predict")
 def predict(req: SearchRequest):
+    start = time.perf_counter()
     if not req.hotels:
+        REQUESTS.labels("422").inc()
         raise HTTPException(422, "La liste d'hôtels est vide")
 
     df = pd.DataFrame([h.model_dump() for h in req.hotels])
@@ -62,7 +74,7 @@ def predict(req: SearchRequest):
     df["date_time"] = pd.to_datetime(df["date_time"])
     df = df.reindex(columns=RAW_COLS)
 
-    # Correction 1 : forcer les colonnes en nombres AVANT le FeatureBuilder
+    # Forcer les colonnes en nombres AVANT le FeatureBuilder
     df[NUM_COLS] = df[NUM_COLS].apply(pd.to_numeric, errors="coerce")
 
     for c in PLACEHOLDER_COLS:
@@ -70,11 +82,18 @@ def predict(req: SearchRequest):
 
     feats = state["fb"].transform(df)
 
-    # Correction 2 : forcer le type float APRÈS le FeatureBuilder
+    # Forcer le type float APRÈS le FeatureBuilder
     X = feats[state["model"].feature_name()].apply(pd.to_numeric, errors="coerce").astype(float)
     df["score"] = state["model"].predict(X)
 
     ranked = df.sort_values("score", ascending=False).reset_index(drop=True)
+
+    LIST_SIZE.observe(len(df))
+    for s in df["score"]:
+        SCORES.observe(float(s))
+    REQUESTS.labels("200").inc()
+    LATENCY.observe(time.perf_counter() - start)
+
     return {"ranking": [
         {"rank": i + 1, "prop_id": int(r.prop_id), "score": round(float(r.score), 5)}
         for i, r in ranked.iterrows()
