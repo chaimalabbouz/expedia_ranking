@@ -1,2 +1,4 @@
 /validation.json
 /shap_importance.json
+/drift_production.html
+/drift_simulated.html

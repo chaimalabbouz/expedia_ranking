@@ -62,3 +62,16 @@ stages:
     outs:
       - reports/promotion.json:
           cache: false
+
+  monitor:
+    cmd: .venv-monitor\Scripts\python.exe -m src.monitoring.drift
+    deps:
+      - src/monitoring/drift.py
+      - data/splits/train.parquet
+      - data/production/production.parquet
+    outs:
+      - reports/drift_production.html
+      - reports/drift_simulated.html
+    metrics:
+      - reports/drift_summary.json:
+          cache: false          

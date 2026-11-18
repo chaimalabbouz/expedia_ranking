@@ -9,8 +9,8 @@ stages:
       size: 109391905
     - path: src/data/validate.py
       hash: md5
-      md5: 4698062c60e34dfde5ee948cc8696909
-      size: 1407
+      md5: 457ce6662e8cba6bbe37476981948ca9
+      size: 1385
     outs:
     - path: reports/validation.json
       hash: md5
@@ -29,7 +29,7 @@ stages:
       size: 49
     - path: src/data/split.py
       hash: md5
-      md5: 5869e7b3b035cc014e825996204dc0d6
+      md5: d41300400fe96db8a02db5113ad5709f
       size: 1561
     params:
       params.yaml:
@@ -55,12 +55,12 @@ stages:
       size: 16338906
     - path: src/features
       hash: md5
-      md5: 13dbe24752f016bb5492c3d150c02c1b.dir
-      size: 25764
+      md5: 9f1b05abc9d945eb75db74c1e7a1f333.dir
+      size: 25766
       nfiles: 18
     - path: src/models/train.py
       hash: md5
-      md5: 750fb90d2d86872d014c22906871f85e
+      md5: b7c83bfbcba6932228b8f4827d11af63
       size: 3558
     params:
       params.yaml:
@@ -89,8 +89,8 @@ stages:
       size: 4786293
     - path: models/model.txt
       hash: md5
-      md5: 1d75c6081f40a7dffeacaa2149a8dfe3
-      size: 1170078
+      md5: db6ac26ae61b2ffa08b7ded2f16f6a3c
+      size: 1170076
     - path: reports/metrics.json
       hash: md5
       md5: 1dc2e9a3e9a876be0d06b88c66982dc0
@@ -108,12 +108,12 @@ stages:
       size: 4786293
     - path: models/model.txt
       hash: md5
-      md5: 1d75c6081f40a7dffeacaa2149a8dfe3
-      size: 1170078
+      md5: db6ac26ae61b2ffa08b7ded2f16f6a3c
+      size: 1170076
     - path: src/features
       hash: md5
-      md5: 13dbe24752f016bb5492c3d150c02c1b.dir
-      size: 25764
+      md5: 9f1b05abc9d945eb75db74c1e7a1f333.dir
+      size: 25766
       nfiles: 18
     - path: src/models/evaluate.py
       hash: md5
@@ -143,8 +143,8 @@ stages:
       size: 4786293
     - path: models/model.txt
       hash: md5
-      md5: 1d75c6081f40a7dffeacaa2149a8dfe3
-      size: 1170078
+      md5: db6ac26ae61b2ffa08b7ded2f16f6a3c
+      size: 1170076
     - path: reports/test_metrics.json
       hash: md5
       md5: 687a373494147ccab38016a1916b7098
@@ -156,5 +156,33 @@ stages:
     outs:
     - path: reports/promotion.json
       hash: md5
-      md5: fd3600e63a0390ab2e8fe1ff571b2a0f
-      size: 106
+      md5: 8be5f9c1485ff8deae34c5f08e1785df
+      size: 110
+  monitor:
+    cmd: .venv-monitor\Scripts\python.exe -m src.monitoring.drift
+    deps:
+    - path: data/production/production.parquet
+      hash: md5
+      md5: 5e4b66b6aab031817f11182a7fe70a8b
+      size: 78310637
+    - path: data/splits/train.parquet
+      hash: md5
+      md5: b0e24af9cea5c2a190400075aae9fa07
+      size: 76855204
+    - path: src/monitoring/drift.py
+      hash: md5
+      md5: 263c91e424248e6436c4374c6f3b362d
+      size: 1679
+    outs:
+    - path: reports/drift_production.html
+      hash: md5
+      md5: ac67c07efa6cd9d83abee3c4c8082376
+      size: 4554855
+    - path: reports/drift_simulated.html
+      hash: md5
+      md5: 39a2b2d6d5beeed6ce47db1abfb0c244
+      size: 4553838
+    - path: reports/drift_summary.json
+      hash: md5
+      md5: e55c220316040449069b6f43f497d917
+      size: 102
